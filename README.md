@@ -1,5 +1,5 @@
 # instagram-follower-tool
-Re-implements lost functionality from an old Instagram API endpoint. Since GET followers and GET following are now deprecated and unusable, I've decided to implement them back for myself/anyone who requires that functionality.
+Re-implements lost functionality from an old Instagram API endpoint. Since GET followers and GET following are now deprecated since 2016(?) and unusable, I've decided to implement them back for myself/anyone who requires that functionality.
 
 Requirements: 
 Firefox webdriver for selenium
