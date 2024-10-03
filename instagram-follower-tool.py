@@ -17,30 +17,32 @@ def get_follower_details(username, password):
     for cookie in cookies:
         driver.add_cookie(cookie)
 
-    WebDriverWait(driver, 2).until(EC.presence_of_element_located((By.NAME, 'username'))).send_keys(USERNAME)
-    WebDriverWait(driver, 2).until(EC.presence_of_element_located((By.NAME, 'password'))).send_keys(PASSWORD)
-    WebDriverWait(driver, 2).until(EC.element_to_be_clickable((By.CSS_SELECTOR, '._acan._acap._acas._aj1-._ap30'))).click() #login button
-    WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'button._a9--:nth-child(2)'))).click() #not now button
+    WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.NAME, 'username'))).send_keys(USERNAME)
+    WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.NAME, 'password'))).send_keys(PASSWORD)
+    WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.CSS_SELECTOR, '._acan._acap._acas._aj1-._ap30'))).click() #login button
+    time.sleep(3) 
+    WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'button._a9--:nth-child(2)'))).click() #not now button
 
     pickle.dump(driver.get_cookies(), open('cookies.pkl', 'wb'))
 
     time.sleep(5) # wait for the page to load
 
     # Define the JavaScript code to retrieve followers and followings
-    script = """
-    const username = 'andrew.howee';
+
+    script = f"""
+    const username = '{USERNAME}';
 
     let followers = [];
     let followings = [];
     let dontFollowMeBack = [];
     let iDontFollowBack = [];
 
-    return (async () => {
-    try {
+    return (async () => {{
+    try {{
         console.log(`Process started! Give it a couple of seconds`);
 
         const userQueryRes = await fetch(
-        `https://www.instagram.com/web/search/topsearch/?query=${username}`
+        `https://www.instagram.com/web/search/topsearch/?query=${{username}}`
         );
 
         const userQueryJson = await userQueryRes.json();
@@ -53,96 +55,100 @@ def get_follower_details(username, password):
         let after = null;
         let has_next = true;
 
-        while (has_next) {
+        while (has_next) {{
         await fetch(
             `https://www.instagram.com/graphql/query/?query_hash=c76146de99bb02f6415203be841dd25a&variables=` +
             encodeURIComponent(
-                JSON.stringify({
+                JSON.stringify({{
                 id: userId,
                 include_reel: true,
                 fetch_mutual: true,
                 first: 50,
                 after: after,
-                })
+                }})
             )
         )
             .then((res) => res.json())
-            .then((res) => {
+            .then((res) => {{
             has_next = res.data.user.edge_followed_by.page_info.has_next_page;
             after = res.data.user.edge_followed_by.page_info.end_cursor;
             followers = followers.concat(
-                res.data.user.edge_followed_by.edges.map(({ node }) => {
-                return {
+                res.data.user.edge_followed_by.edges.map(({{
+                    node
+                }}) => {{
+                return {{
                     username: node.username,
                     full_name: node.full_name,
-                };
-                })
+                }};
+                }})
             );
-            });
-        }
+            }});
+        }}
 
-        console.log({ followers });
+        console.log({{ followers }});
 
         after = null;
         has_next = true;
 
-        while (has_next) {
+        while (has_next) {{
         await fetch(
             `https://www.instagram.com/graphql/query/?query_hash=d04b0a864b4b54837c0d870b0e77e076&variables=` +
             encodeURIComponent(
-                JSON.stringify({
+                JSON.stringify({{
                 id: userId,
                 include_reel: true,
                 fetch_mutual: true,
                 first: 50,
                 after: after,
-                })
+                }})
             )
         )
             .then((res) => res.json())
-            .then((res) => {
+            .then((res) => {{
             has_next = res.data.user.edge_follow.page_info.has_next_page;
             after = res.data.user.edge_follow.page_info.end_cursor;
             followings = followings.concat(
-                res.data.user.edge_follow.edges.map(({ node }) => {
-                return {
+                res.data.user.edge_follow.edges.map(({{
+                    node
+                }}) => {{
+                return {{
                     username: node.username,
                     full_name: node.full_name,
-                };
-                })
+                }};
+                }})
             );
-            });
-        }
+            }});
+        }}
 
-        console.log({ followings });
+        console.log({{ followings }});
 
-        dontFollowMeBack = followings.filter((following) => {
+        dontFollowMeBack = followings.filter((following) => {{
         return !followers.find(
             (follower) => follower.username === following.username
         );
-        });
+        }});
 
-        console.log({ dontFollowMeBack });
+        console.log({{ dontFollowMeBack }});
 
-        iDontFollowBack = followers.filter((follower) => {
+        iDontFollowBack = followers.filter((follower) => {{
         return !followings.find(
             (following) => following.username === follower.username
         );
-        });
+        }});
 
-        console.log({ iDontFollowBack });
+        console.log({{ iDontFollowBack }});
 
-        return {
+        return {{
         followers: followers,
         followings: followings,
         dontFollowMeBack: dontFollowMeBack,
         iDontFollowBack: iDontFollowBack
-        };
-    } catch (err) {
-        console.log({ err });
+        }};
+    }} catch (err) {{
+        console.log({{ err }});
         return null;
-    }
-    })();
+    }}
+    }})();
     """
 
     # Execute the main script and capture the results
